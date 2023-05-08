@@ -1,5 +1,4 @@
 import requests
-from datetime import datetime
 from calendar import Calendar, monthrange
 
 def get_current_weather(station_id, api_key):
@@ -30,11 +29,11 @@ def get_daily_weather(date, station_id, api_key):
 
 def get_monthly_weather(year, month, station_id, api_key):
     c = Calendar()
-    history = []
+    r = []
     for date in [x for x in c.itermonthdates(year, month) if x.month == month]:
         # remove separator from datetime.date objects
         date = str(date).replace('-', '')
 
         # get measurements for each day of a month
-        history.append(get_daily_weather(date, station_id, api_key))
-    return history
+        r.append(get_daily_weather(date, station_id, api_key))
+    return r
