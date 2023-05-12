@@ -3,17 +3,32 @@ from calendar import Calendar, monthrange
 import creds
 from datetime import date, timedelta
 
-# def date_range(start_date, end_date):
-#     for n in range(int((end_date - start_date).days)):
-#         yield start_date + timedelta(n)
+def non_date_to_date(none_date):
+     '''
+     @param date: YYYYMMDD format is required
+     '''
+
+     date_str = str(none_date)
+     year = int(date_str[:4])
+     month = int(date_str[4:6])
+     day = int(date_str[-2:])
+
+     new_date = date(year, month, day)
+     return new_date
+
+
+def date_range(start_date, end_date):
+    for n in range(int((end_date - start_date).days)):
+        yield start_date + timedelta(n)
 
 
 def is_future(date):
     '''
-    @param date: datetime obj
+    @param date: date object
     '''
     today = date.today()
     return date >= today
+
 
 def get_current_weather(station_id, api_key):
     '''
@@ -115,12 +130,56 @@ def get_yearly_weather(station_id, api_key, year):
         return None
 
 
+def get_perdiod_weather(station_id, api_key, start_date, end_date):
+    '''
+    @param statdion_id: Private Weather Station's ID from WeatherUnderground
+    @param api_key: User API key
+    @param start_date: date object or YYYYMMDD
+    @param end_date: date object or YYYYMMDD
+    '''
+
+    rl = []
+
+    # Convert non-date object to date obj
+    if isinstance(start_date, int):
+        start_date = non_date_to_date(start_date)
+
+    if isinstance(end_date, int):
+        end_date = non_date_to_date(end_date)
+
+    # iteration through the individual days of the selected period
+    for single_date in date_range(start_date, end_date):
+        # Conversion of the date objs to int and splitting into 3 variables
+        # remove separator from the date object
+        single_date = str(single_date).replace('-', '')
+
+        # date format validation
+        year, month, day = single_date[0:4], single_date[4:6], single_date[-2:]
+        if month[0] == '0':
+            month = month[1]
+        
+        if day[0] == '0':
+            day = day[1]
+
+        # get measurements
+        r = get_daily_weather(station_id, api_key, int(year), int(month), int(day))
+        if r != None:
+            rl.append(r)
+    
+    # check whether the list of measurements is empty or not
+    if len(rl) != 0:
+        return rl
+    else:
+        return None
+
+
 def get_weather(station_id, api_key, year, month = None , day = None):
     '''
     @param statdion_id: Private Weather Station's ID from WeatherUnderground
     @param api_key: User API key
     @param year: year for which data is to be retrieved (YYYY). Optional.
     @param month: month for which data is to be retrieved (1-12). Optional.
+    @param day: day for which data is to be retrieved. Optional.
     '''
     
     if day != None:
@@ -132,26 +191,3 @@ def get_weather(station_id, api_key, year, month = None , day = None):
     else:
         r = get_yearly_weather(station_id, api_key, year)
         return r
-
-
-# def get_perdiod_weather(station_id, api_key, start_date, end_date):
-#     '''
-#     @param statdion_id: Private Weather Station's ID from WeatherUnderground
-#     @param api_key: User API key
-#     @param start_date: YYYYMMDD
-#     @param end_date: YYYYMMDD
-#     '''
-#     rl = []
-#     for date in date_range(start_date, end_date):
-#         # remove separator from datetime.date objects
-#         date = str(date).replace('-', '')
-
-#         # get measurements for each day of a month
-#         r = get_daily_weather(station_id, api_key, date)
-#         if r != None:
-#             rl.append(r)
-    
-#     if len(rl) != 0:
-#         return rl
-#     else:
-#         return None
